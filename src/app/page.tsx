@@ -2,6 +2,9 @@ import { db } from "@/lib/db";
 import ClientDashboard from "./ClientDashboard";
 import { computeReminderStatus } from "@/features/reminders/utils";
 
+export const dynamic = 'force-dynamic';
+
+
 async function ensureDefaultUserAndVehicle() {
   // Check if default user exists
   let user = await db.user.findUnique({
