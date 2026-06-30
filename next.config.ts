@@ -1,0 +1,14 @@
+import type { NextConfig } from "next";
+import withPWAInit from "@ducanh2912/next-pwa";
+
+const withPWA = withPWAInit({
+  dest: "public",
+  disable: false,
+  register: true,
+});
+
+const nextConfig: NextConfig = {
+  // Config options here
+};
+
+export default withPWA(nextConfig);
