@@ -1,15 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { deleteVehicle } from "../actions";
 import { Plus, Edit2, Trash2, Bike, Car, ChevronDown } from "lucide-react";
+import { createPortal } from "react-dom";
 import VehicleForm from "./VehicleForm";
 
 interface VehicleSelectorProps {
   vehicles: any[];
   activeVehicleId: string | null;
   onSelectVehicle: (id: string) => void;
+}
+
+function Portal({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+  return mounted ? createPortal(children, document.body) : null;
 }
 
 export default function VehicleSelector({
@@ -140,39 +150,43 @@ export default function VehicleSelector({
 
       {/* Modal Add */}
       {isAdding && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-xs">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl w-full max-w-md p-6 overflow-hidden">
-            <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4">
-              Tambah Kendaraan Baru
-            </h3>
-            <VehicleForm
-              onSuccess={() => {
-                setIsAdding(false);
-                router.refresh();
-              }}
-              onCancel={() => setIsAdding(false)}
-            />
+        <Portal>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+              <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4">
+                Tambah Kendaraan Baru
+              </h3>
+              <VehicleForm
+                onSuccess={() => {
+                  setIsAdding(false);
+                  router.refresh();
+                }}
+                onCancel={() => setIsAdding(false)}
+              />
+            </div>
           </div>
-        </div>
+        </Portal>
       )}
 
       {/* Modal Edit */}
       {editingVehicle && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-xs">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl w-full max-w-md p-6 overflow-hidden">
-            <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4">
-              Edit Data Kendaraan
-            </h3>
-            <VehicleForm
-              vehicle={editingVehicle}
-              onSuccess={() => {
-                setEditingVehicle(null);
-                router.refresh();
-              }}
-              onCancel={() => setEditingVehicle(null)}
-            />
+        <Portal>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+              <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4">
+                Edit Data Kendaraan
+              </h3>
+              <VehicleForm
+                vehicle={editingVehicle}
+                onSuccess={() => {
+                  setEditingVehicle(null);
+                  router.refresh();
+                }}
+                onCancel={() => setEditingVehicle(null)}
+              />
+            </div>
           </div>
-        </div>
+        </Portal>
       )}
     </div>
   );
