@@ -1,33 +1,34 @@
 import { db } from "@/lib/db";
 import ClientDashboard from "./ClientDashboard";
 import { computeReminderStatus } from "@/features/reminders/utils";
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
 
-
-async function ensureDefaultUserAndVehicle() {
-  // Check if default user exists
+async function ensureDefaultVehicleForUser(userId: string, email: string, name: string) {
+  // Check if user exists
   let user = await db.user.findUnique({
-    where: { id: "default-user-id" },
+    where: { id: userId },
   });
 
   if (!user) {
     try {
       user = await db.user.create({
         data: {
-          id: "default-user-id",
-          email: "user@vmms.com",
-          name: "Pengguna VMMS",
+          id: userId,
+          email,
+          name,
         },
       });
     } catch (e) {
-      console.error("Failed to create default user:", e);
+      console.error("Failed to create user:", e);
     }
   }
 
-  // Check if any vehicle exists for default user
+  // Check if any vehicle exists for this user
   const vehicleCount = await db.vehicle.count({
-    where: { userId: "default-user-id" },
+    where: { userId },
   });
 
   if (vehicleCount === 0 && user) {
@@ -35,7 +36,6 @@ async function ensureDefaultUserAndVehicle() {
       // Seed default vehicle and reminders
       const vehicle = await db.vehicle.create({
         data: {
-          id: "default-vehicle-id",
           name: "Honda Vario 150",
           type: "MOTORCYCLE",
           licensePlate: "B 1234 ABC",
@@ -99,18 +99,31 @@ async function ensureDefaultUserAndVehicle() {
         });
       }
     } catch (e) {
-      console.error("Failed to seed default vehicle:", e);
+      console.error("Failed to seed vehicle for user:", e);
     }
   }
 }
 
 export default async function Home() {
-  // Ensure we have a default user and vehicle seeded
-  await ensureDefaultUserAndVehicle();
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  // Fetch all vehicles for the default user
+  if (!user) {
+    redirect("/login");
+  }
+
+  const userId = user.id;
+  const email = user.email || "";
+  const name = user.user_metadata?.name || email.split("@")[0];
+
+  // Ensure we have a vehicle seeded for the authenticated user
+  await ensureDefaultVehicleForUser(userId, email, name);
+
+  // Fetch all vehicles for the user
   const vehicles = await db.vehicle.findMany({
-    where: { userId: "default-user-id" },
+    where: { userId },
     orderBy: { createdAt: "desc" },
   });
 
@@ -170,3 +183,4 @@ export default async function Home() {
     />
   );
 }
+

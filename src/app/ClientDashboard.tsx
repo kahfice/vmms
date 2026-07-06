@@ -23,7 +23,9 @@ import {
   Edit2,
   DollarSign,
   Route,
+  LogOut,
 } from "lucide-react";
+import { logout } from "@/features/auth/actions";
 
 interface ClientDashboardProps {
   vehicles: any[];
@@ -69,6 +71,13 @@ export default function ClientDashboard({
       document.documentElement.classList.add("dark");
       localStorage.theme = "dark";
       setDarkMode(true);
+    }
+  };
+
+  const handleLogout = async () => {
+    if (confirm("Apakah Anda yakin ingin keluar?")) {
+      await logout();
+      window.location.href = "/login";
     }
   };
 
@@ -233,7 +242,7 @@ export default function ClientDashboard({
             <BarChart3 className="h-4.5 w-4.5" />
             Statistik
           </button>
-          <button
+  <button
             onClick={() => setActiveTab("settings")}
             className={`w-full py-2.5 px-3.5 rounded-xl font-semibold text-sm flex items-center gap-2.5 transition-colors cursor-pointer ${
               activeTab === "settings"
@@ -243,6 +252,16 @@ export default function ClientDashboard({
           >
             <SettingsIcon className="h-4.5 w-4.5" />
             Pengaturan
+          </button>
+          
+          <div className="h-px bg-slate-100 dark:bg-slate-800 my-2"></div>
+          
+          <button
+            onClick={handleLogout}
+            className="w-full py-2.5 px-3.5 rounded-xl font-semibold text-sm flex items-center gap-2.5 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+          >
+            <LogOut className="h-4.5 w-4.5" />
+            Keluar (Logout)
           </button>
         </nav>
 
@@ -480,6 +499,24 @@ export default function ClientDashboard({
                     <option value="km">Kilometer (km)</option>
                     <option value="mi">Mil (mi)</option>
                   </select>
+                </div>
+
+                {/* Logout Option */}
+                <div className="py-4 flex items-center justify-between">
+                  <div>
+                    <span className="block text-sm font-semibold text-red-600 dark:text-red-400">
+                      Keluar dari Akun
+                    </span>
+                    <span className="block text-xs text-slate-400">
+                      Akhiri sesi Anda pada perangkat ini
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 font-medium py-1.5 px-4 rounded-lg text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <LogOut className="h-4 w-4" /> Keluar
+                  </button>
                 </div>
               </div>
             </div>

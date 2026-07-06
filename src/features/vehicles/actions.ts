@@ -11,10 +11,20 @@ const vehicleSchema = z.object({
   currentOdometer: z.number().min(0, "Kilometer tidak boleh negatif"),
 });
 
-export async function getVehicles(userId = "default-user-id") {
+import { createClient } from "@/lib/supabase/server";
+
+export async function getVehicles(userId?: string) {
   try {
+    let targetUserId = userId;
+    if (!targetUserId) {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      targetUserId = user.id;
+    }
+
     return await db.vehicle.findMany({
-      where: { userId },
+      where: { userId: targetUserId },
       orderBy: { createdAt: "desc" },
     });
   } catch (error) {
@@ -43,9 +53,18 @@ export async function getVehicleById(id: string) {
 
 export async function createVehicle(data: z.infer<typeof vehicleSchema> & { userId?: string }) {
   const validatedData = vehicleSchema.parse(data);
-  const userId = data.userId || "default-user-id";
+  let userId = data.userId;
 
   try {
+    if (!userId) {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { success: false, error: "Pengguna tidak terautentikasi" };
+      }
+      userId = user.id;
+    }
+
     const vehicle = await db.vehicle.create({
       data: {
         name: validatedData.name,
