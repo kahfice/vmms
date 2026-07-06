@@ -4,6 +4,7 @@ import { useState } from "react";
 import { deleteServiceHistory } from "../actions";
 import { Plus, Trash2, Calendar, MapPin, DollarSign, ChevronDown, ChevronUp, Image as ImageIcon } from "lucide-react";
 import ServiceHistoryForm from "./ServiceHistoryForm";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface ServiceHistoryListProps {
   vehicleId: string;
@@ -18,17 +19,25 @@ export default function ServiceHistoryList({
 }: ServiceHistoryListProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDeletePending, setIsDeletePending] = useState(false);
 
   const toggleExpand = (id: string) => {
     setExpandedHistoryId(expandedHistoryId === id ? null : id);
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Apakah Anda yakin ingin menghapus catatan servis ini? Odometer kendaraan mungkin akan disesuaikan.")) {
-      const res = await deleteServiceHistory(id, vehicleId);
-      if (!res.success) {
-        alert(res.error || "Gagal menghapus riwayat servis");
-      }
+  const handleDelete = (id: string) => {
+    setDeletingId(id);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingId) return;
+    setIsDeletePending(true);
+    const res = await deleteServiceHistory(deletingId, vehicleId);
+    setIsDeletePending(false);
+    setDeletingId(null);
+    if (!res.success) {
+      alert(res.error || "Gagal menghapus riwayat servis");
     }
   };
 
@@ -206,6 +215,15 @@ export default function ServiceHistoryList({
           })}
         </div>
       )}
+      {/* Modal Confirm Delete */}
+      <ConfirmModal
+        isOpen={deletingId !== null}
+        title="Hapus Catatan Servis"
+        message="Apakah Anda yakin ingin menghapus catatan servis ini? Odometer kendaraan mungkin akan disesuaikan secara otomatis. Tindakan ini tidak dapat dibatalkan."
+        isPending={isDeletePending}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeletingId(null)}
+      />
     </div>
   );
 }

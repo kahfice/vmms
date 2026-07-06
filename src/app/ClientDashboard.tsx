@@ -54,13 +54,23 @@ export default function ClientDashboard({
   const [isEditingOdometer, setIsEditingOdometer] = useState(false);
   const [newOdometerVal, setNewOdometerVal] = useState("");
 
-  const activeVehicle = vehicles.find((v) => v.id === activeVehicleId) || vehicles[0];
-
   useEffect(() => {
     // Sync initial theme
     const isDark = document.documentElement.classList.contains("dark");
     setDarkMode(isDark);
   }, []);
+
+  const [prevInitialVehicles, setPrevInitialVehicles] = useState(initialVehicles);
+
+  if (initialVehicles !== prevInitialVehicles) {
+    setPrevInitialVehicles(initialVehicles);
+    setVehicles(initialVehicles);
+    if (initialVehicles.length > 0 && !initialVehicles.some((v) => v.id === activeVehicleId)) {
+      setActiveVehicleId(initialVehicles[0].id);
+    }
+  }
+
+  const activeVehicle = vehicles.find((v) => v.id === activeVehicleId) || vehicles[0];
 
   const toggleTheme = () => {
     if (darkMode) {

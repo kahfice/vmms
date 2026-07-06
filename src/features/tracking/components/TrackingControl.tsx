@@ -52,7 +52,8 @@ export default function TrackingControl({
 
   const handleStop = async () => {
     stopTracking();
-    if (distance <= 0) {
+    if (distance < 0.1) {
+      alert("Perjalanan kurang dari 100 meter. Data perjalanan tidak disimpan.");
       resetTracking();
       return;
     }

@@ -6,6 +6,7 @@ import { deleteVehicle } from "../actions";
 import { Plus, Edit2, Trash2, Bike, Car, ChevronDown } from "lucide-react";
 import { createPortal } from "react-dom";
 import VehicleForm from "./VehicleForm";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface VehicleSelectorProps {
   vehicles: any[];
@@ -31,6 +32,8 @@ export default function VehicleSelector({
   const [isOpen, setIsOpen] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<any | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDeletePending, setIsDeletePending] = useState(false);
 
   const activeVehicle = vehicles.find((v) => v.id === activeVehicleId) || vehicles[0];
 
@@ -39,15 +42,22 @@ export default function VehicleSelector({
     setIsOpen(false);
   };
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
+  const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm("Apakah Anda yakin ingin menghapus kendaraan ini beserta seluruh datanya?")) {
-      const res = await deleteVehicle(id);
-      if (res.success) {
-        router.refresh();
-      } else {
-        alert(res.error || "Gagal menghapus kendaraan");
-      }
+    setDeletingId(id);
+    setIsOpen(false);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingId) return;
+    setIsDeletePending(true);
+    const res = await deleteVehicle(deletingId);
+    setIsDeletePending(false);
+    setDeletingId(null);
+    if (res.success) {
+      router.refresh();
+    } else {
+      alert(res.error || "Gagal menghapus kendaraan");
     }
   };
 
@@ -73,11 +83,6 @@ export default function VehicleSelector({
             )}
             <div className="text-left">
               <span className="block font-bold">{activeVehicle?.name || "Pilih Kendaraan"}</span>
-              {activeVehicle?.licensePlate && (
-                <span className="block text-xs font-medium text-slate-400">
-                  {activeVehicle.licensePlate}
-                </span>
-              )}
             </div>
           </div>
           <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
@@ -188,6 +193,15 @@ export default function VehicleSelector({
           </div>
         </Portal>
       )}
+      {/* Modal Confirm Delete */}
+      <ConfirmModal
+        isOpen={deletingId !== null}
+        title="Hapus Kendaraan"
+        message="Apakah Anda yakin ingin menghapus kendaraan ini beserta seluruh datanya? Tindakan ini tidak dapat dibatalkan."
+        isPending={isDeletePending}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeletingId(null)}
+      />
     </div>
   );
 }

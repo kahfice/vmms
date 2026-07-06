@@ -4,6 +4,7 @@ import { useState } from "react";
 import { deleteReminder, ReminderStatus } from "../actions";
 import { Plus, Trash2, Calendar, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 import ReminderForm from "./ReminderForm";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface ReminderListProps {
   vehicleId: string;
@@ -49,12 +50,21 @@ export default function ReminderList({ vehicleId, reminders }: ReminderListProps
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Apakah Anda yakin ingin menghapus pengingat ini?")) {
-      const res = await deleteReminder(id, vehicleId);
-      if (!res.success) {
-        alert(res.error || "Gagal menghapus pengingat");
-      }
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDeletePending, setIsDeletePending] = useState(false);
+
+  const handleDelete = (id: string) => {
+    setDeletingId(id);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingId) return;
+    setIsDeletePending(true);
+    const res = await deleteReminder(deletingId, vehicleId);
+    setIsDeletePending(false);
+    setDeletingId(null);
+    if (!res.success) {
+      alert(res.error || "Gagal menghapus pengingat");
     }
   };
 
@@ -194,6 +204,15 @@ export default function ReminderList({ vehicleId, reminders }: ReminderListProps
           })}
         </div>
       )}
+      {/* Modal Confirm Delete */}
+      <ConfirmModal
+        isOpen={deletingId !== null}
+        title="Hapus Pengingat Servis"
+        message="Apakah Anda yakin ingin menghapus pengingat servis ini? Tindakan ini tidak dapat dibatalkan."
+        isPending={isDeletePending}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeletingId(null)}
+      />
     </div>
   );
 }
